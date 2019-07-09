@@ -17,16 +17,6 @@ public class Iris : MonoBehaviour
 
     Image[,] nodeArr;
 
-    void Init(int width = 50, int height = 50)
-    {
-        this.width = width;
-        this.height = height;
-        gridLayout = transform.GetComponentInChildren<GridLayoutGroup>();
-        nodePrefab = Resources.Load("Node") as GameObject;
-
-        CreateGrid();
-    }
-
     void Start()
     {
         Init();        
@@ -35,6 +25,16 @@ public class Iris : MonoBehaviour
     void Update()
     {
         FindNode(target.position);
+    }
+
+    void Init(int width = 50, int height = 50)
+    {
+        this.width = width;
+        this.height = height;
+        gridLayout = transform.GetComponentInChildren<GridLayoutGroup>();
+        nodePrefab = Resources.Load("Node") as GameObject;
+
+        CreateGrid();
     }
 
     void CreateGrid()
@@ -62,6 +62,9 @@ public class Iris : MonoBehaviour
 
     public Image FindNode(Vector3 worldPos)
     {
+        // 월드 좌표계를 스크린 좌표계로 변경 시
+        // x,y값은 좌표값으로, z값은 카메라와의 거리값으로 설정
+
         Vector3 screenPos = Camera.main.WorldToScreenPoint(worldPos);
         for(int row = 0; row < rowCount; row++)
         {
@@ -77,6 +80,44 @@ public class Iris : MonoBehaviour
         }
         return null;
     }
+
+    public Image FadeNode(Vector3 worldPos)
+    {
+        // 월드 좌표계를 스크린 좌표계로 변경 시
+        // x,y값은 좌표값으로, z값은 카메라와의 거리값으로 설정
+
+        Vector3 screenPos = Camera.main.WorldToScreenPoint(worldPos);
+        for (int row = 0; row < rowCount; row++)
+        {
+            for (int col = 0; col < colCount; col++)
+            {
+                Image image = nodeArr[row, col];
+                Bounds bound = new Bounds(image.transform.position, image.rectTransform.sizeDelta);
+                if (bound.Contains(Input.mousePosition) && Input.GetMouseButtonDown(0))
+                {
+                    image.color = Color.red;
+                    Image[] neighbors = {nodeArr[row-1, col], nodeArr[row+1, col],
+                                        nodeArr[row, col-1], nodeArr[row, col+1] };
+                    for(int i=0; i<neighbors.Length; i++)
+                    {
+
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    public void FadeNodeMore(Image node, int row, int col)
+    {
+        node.color = Color.red;
+        Image[] neighbors = { nodeArr[row-1, col], nodeArr[row+1, col],
+                              nodeArr[row, col-1], nodeArr[row, col+1] };
+    }
+
+    // 마우스로 클릭하면 색이 변하고
+    // 주변의 노드들 4개를 얻어와 (nodeArr)
+    // 그 노드를 담아 다시 함수에 넣는다
 }
 
 // UI
