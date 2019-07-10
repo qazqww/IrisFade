@@ -18,6 +18,8 @@ public class Iris : MonoBehaviour
 
     Color transparent = new Color(0, 0, 0, 0);
 
+    bool isFadein = false;
+
     void Start()
     {
         Init();        
@@ -25,8 +27,20 @@ public class Iris : MonoBehaviour
 
     void Update()
     {
-        if(Input.GetMouseButtonDown(0))
+        if (Input.GetMouseButtonDown(0) && !isFadein)
+        {
             FindNode(Input.mousePosition);
+            isFadein = true;
+        }
+    }
+
+    private void OnGUI()
+    {
+        if(GUI.Button(new Rect(0, 0, 200, 200), "FadeOut"))
+        {
+            isFadein = false;
+            StartCoroutine(FadeOut());
+        }
     }
 
     void Init(int size = 50)
@@ -123,6 +137,50 @@ public class Iris : MonoBehaviour
             }
             yield return new WaitForSeconds(0.05f);
         }
+    }
+
+    IEnumerator FadeOut()
+    {
+        int row = rowCount / 2;
+        int col = colCount / 2;
+
+        for (int i = colCount; i > 0; i--)
+        {
+            // LEFT
+            for (int r = -i; r <= i; r++)
+            {
+                if (row + r < 0 || row + r >= rowCount || col - i < 0)
+                    continue;
+                nodeArr[row + r, col - i].color = Color.black;
+            }
+
+            // RIGHT
+            for (int r = -i; r <= i; r++)
+            {
+                if (row + r < 0 || row + r >= rowCount || col + i >= colCount)
+                    continue;
+                nodeArr[row + r, col + i].color = Color.black;
+            }
+
+            // UP
+            for (int c = -i; c <= i; c++)
+            {
+                if (row - i < 0 || col + c < 0 || col + c >= colCount)
+                    continue;
+                nodeArr[row - i, col + c].color = Color.black;
+
+            }
+
+            // DOWN
+            for (int c = -i; c <= i; c++)
+            {
+                if (row + i >= rowCount || col + c < 0 || col + c >= colCount)
+                    continue;
+                nodeArr[row + i, col + c].color = Color.black;
+            }
+            yield return new WaitForSeconds(0.05f);
+        }
+        nodeArr[row, col].color = Color.black;
     }
 }
 
