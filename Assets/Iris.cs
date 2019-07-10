@@ -6,19 +6,18 @@ using UnityEngine.UI;
 public class Iris : MonoBehaviour
 {
     GridLayoutGroup gridLayout;
+    GameObject nodePrefab;
+    [SerializeField] Transform target;
+    Image[,] nodeArr;
 
     [SerializeField]    int size = 50;
     int rowCount = 0;
     int colCount = 0;
-
-    GameObject nodePrefab;
-    [SerializeField]    Transform target;
-
-    Image[,] nodeArr;
+    int targetRow;
+    int targetCol;
+    bool isFade = false;
 
     Color transparent = new Color(0, 0, 0, 0);
-
-    bool isFadein = false;
 
     void Start()
     {
@@ -27,19 +26,22 @@ public class Iris : MonoBehaviour
 
     void Update()
     {
-        if (Input.GetMouseButtonDown(0) && !isFadein)
-        {
-            FindNode(Input.mousePosition);
-            isFadein = true;
-        }
+        if (!isFade)
+            FindNode(target.position);
     }
 
     private void OnGUI()
     {
-        if(GUI.Button(new Rect(0, 0, 200, 200), "FadeOut"))
+        if (GUI.Button(new Rect(0, 0, 200, 200), "FadeIn"))
         {
-            isFadein = false;
-            StartCoroutine(FadeOut());
+            isFade = true;
+            StartCoroutine(FadeIn(targetRow, targetCol));
+        }
+
+        if (GUI.Button(new Rect(0, 200, 200, 200), "FadeOut"))
+        {
+            isFade = true;
+            StartCoroutine(FadeOut(targetRow, targetCol));
         }
     }
 
@@ -48,7 +50,7 @@ public class Iris : MonoBehaviour
         this.size = size;
         gridLayout = transform.GetComponentInChildren<GridLayoutGroup>();
         nodePrefab = Resources.Load("Node") as GameObject;
-
+        
         CreateGrid();
     }
 
@@ -89,17 +91,18 @@ public class Iris : MonoBehaviour
                 Bounds bound = new Bounds(image.transform.position, image.rectTransform.sizeDelta);
                 if (bound.Contains(worldPos))
                 {
-                    //Debug.Log("row: " + row + " col: " + col);
-                    StartCoroutine(FadeIn(image, row, col));
+                    targetRow = row;
+                    targetCol = col;                   
+                    break;
                 }
             }
         }
         return null;
     }
 
-    IEnumerator FadeIn(Image image, int row, int col)
+    IEnumerator FadeIn(int row, int col)
     {
-        image.color = transparent;
+        nodeArr[row, col].color = transparent;
         yield return new WaitForSeconds(0.1f);
         for (int i = 1; i < colCount; i++)
         {
@@ -137,14 +140,13 @@ public class Iris : MonoBehaviour
             }
             yield return new WaitForSeconds(0.05f);
         }
+        isFade = false;
     }
 
-    IEnumerator FadeOut()
+    IEnumerator FadeOut(int row, int col)
     {
-        int row = rowCount / 2;
-        int col = colCount / 2;
-
-        for (int i = colCount; i > 0; i--)
+        int count = Mathf.Max(row, rowCount - row, col, colCount - col);
+        for (int i = count; i > 0; i--)
         {
             // LEFT
             for (int r = -i; r <= i; r++)
@@ -181,6 +183,7 @@ public class Iris : MonoBehaviour
             yield return new WaitForSeconds(0.05f);
         }
         nodeArr[row, col].color = Color.black;
+        isFade = false;
     }
 }
 
