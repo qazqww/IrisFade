@@ -7,8 +7,7 @@ public class Iris : MonoBehaviour
 {
     GridLayoutGroup gridLayout;
 
-    [SerializeField]    int width = 50;
-    [SerializeField]    int height = 50;
+    [SerializeField]    int size = 50;
     int rowCount = 0;
     int colCount = 0;
 
@@ -17,6 +16,8 @@ public class Iris : MonoBehaviour
 
     Image[,] nodeArr;
 
+    Color transparent = new Color(0, 0, 0, 0);
+
     void Start()
     {
         Init();        
@@ -24,13 +25,13 @@ public class Iris : MonoBehaviour
 
     void Update()
     {
-        FindNode(target.position);
+        if(Input.GetMouseButtonDown(0))
+            FindNode(Input.mousePosition);
     }
 
-    void Init(int width = 50, int height = 50)
+    void Init(int size = 50)
     {
-        this.width = width;
-        this.height = height;
+        this.size = size;
         gridLayout = transform.GetComponentInChildren<GridLayoutGroup>();
         nodePrefab = Resources.Load("Node") as GameObject;
 
@@ -41,18 +42,18 @@ public class Iris : MonoBehaviour
     {
         Transform root = gridLayout.transform;
 
-        int remainderW = Screen.width % width;
-        int remainderH = Screen.height % height;
+        int remainderW = Screen.width % size;
+        int remainderH = Screen.height % size;
 
-        colCount = Screen.width / width + (remainderW > 0 ? 1 : 0);
-        rowCount = Screen.height / height + (remainderH > 0 ? 1 : 0);
+        colCount = Screen.width / size + (remainderW > 0 ? 1 : 0);
+        rowCount = Screen.height / size + (remainderH > 0 ? 1 : 0);
 
         nodeArr = new Image[rowCount, colCount];
         gridLayout.constraintCount = colCount;
 
-        for(int row = 0; row < rowCount; row++)
+        for(int col = 0; col < colCount; col++)
         {
-            for(int col = 0; col < colCount; col++)
+            for(int row = 0; row < rowCount; row++)
             {
                 GameObject obj = Instantiate(nodePrefab, root);
                 nodeArr[row, col] = obj.GetComponent<Image>();
@@ -73,51 +74,56 @@ public class Iris : MonoBehaviour
                 Image image = nodeArr[row, col];
                 Bounds bound = new Bounds(image.transform.position, image.rectTransform.sizeDelta);
                 if (bound.Contains(worldPos))
-                    image.color = Color.red;
-                else
-                    image.color = Color.black;
-            }
-        }
-        return null;
-    }
-
-    public Image FadeNode(Vector3 worldPos)
-    {
-        // 월드 좌표계를 스크린 좌표계로 변경 시
-        // x,y값은 좌표값으로, z값은 카메라와의 거리값으로 설정
-
-        Vector3 screenPos = Camera.main.WorldToScreenPoint(worldPos);
-        for (int row = 0; row < rowCount; row++)
-        {
-            for (int col = 0; col < colCount; col++)
-            {
-                Image image = nodeArr[row, col];
-                Bounds bound = new Bounds(image.transform.position, image.rectTransform.sizeDelta);
-                if (bound.Contains(Input.mousePosition) && Input.GetMouseButtonDown(0))
                 {
-                    image.color = Color.red;
-                    Image[] neighbors = {nodeArr[row-1, col], nodeArr[row+1, col],
-                                        nodeArr[row, col-1], nodeArr[row, col+1] };
-                    for(int i=0; i<neighbors.Length; i++)
-                    {
-
-                    }
+                    //Debug.Log("row: " + row + " col: " + col);
+                    StartCoroutine(FadeIn(image, row, col));
                 }
             }
         }
         return null;
     }
 
-    public void FadeNodeMore(Image node, int row, int col)
+    IEnumerator FadeIn(Image image, int row, int col)
     {
-        node.color = Color.red;
-        Image[] neighbors = { nodeArr[row-1, col], nodeArr[row+1, col],
-                              nodeArr[row, col-1], nodeArr[row, col+1] };
-    }
+        image.color = transparent;
+        yield return new WaitForSeconds(0.1f);
+        for (int i = 1; i < colCount; i++)
+        {
+            // LEFT
+            for(int r = -i; r <= i; r++)
+            {
+                if (row + r < 0 || row + r >= rowCount || col - i < 0)
+                    continue;
+                nodeArr[row + r, col - i].color = transparent;
+            }
 
-    // 마우스로 클릭하면 색이 변하고
-    // 주변의 노드들 4개를 얻어와 (nodeArr)
-    // 그 노드를 담아 다시 함수에 넣는다
+            // RIGHT
+            for (int r = -i; r <= i; r++)
+            {
+                if (row + r < 0 || row + r >= rowCount || col + i >= colCount)
+                    continue;
+                nodeArr[row + r, col + i].color = transparent;
+            }      
+            
+            // UP
+            for (int c = -i; c <= i; c++)
+            {
+                if (row - i < 0 || col + c < 0 || col + c >= colCount)
+                    continue;
+                nodeArr[row - i, col + c].color = transparent;
+                
+            }
+
+            // DOWN
+            for (int c = -i; c <= i; c++)
+            {
+                if (row + i >= rowCount || col + c < 0 || col + c >= colCount)
+                    continue;
+                nodeArr[row + i, col + c].color = transparent;
+            }
+            yield return new WaitForSeconds(0.05f);
+        }
+    }
 }
 
 // UI
