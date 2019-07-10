@@ -6,11 +6,11 @@ using UnityEngine.UI;
 public class Iris : MonoBehaviour
 {
     GridLayoutGroup gridLayout;
-    GameObject nodePrefab;
     [SerializeField] Transform target;
+    Image nodePrefab;
     Image[,] nodeArr;
 
-    [SerializeField]    int size = 50;
+    int size = 50;
     int rowCount = 0;
     int colCount = 0;
     int targetRow;
@@ -48,8 +48,8 @@ public class Iris : MonoBehaviour
     void Init(int size = 50)
     {
         this.size = size;
-        gridLayout = transform.GetComponentInChildren<GridLayoutGroup>();
-        nodePrefab = Resources.Load("Node") as GameObject;
+        gridLayout = GetComponentInChildren<GridLayoutGroup>(true);
+        nodePrefab = Resources.Load<Image>("Node");
         
         CreateGrid();
     }
@@ -71,8 +71,10 @@ public class Iris : MonoBehaviour
         {
             for(int row = 0; row < rowCount; row++)
             {
-                GameObject obj = Instantiate(nodePrefab, root);
-                nodeArr[row, col] = obj.GetComponent<Image>();
+                Image image = Instantiate(nodePrefab, gridLayout.transform);
+                image.name = string.Format("Node[{0}, {1}]", row, col);
+                if(image != null)
+                    nodeArr[row, col] = image;
             }
         }
     }
@@ -100,6 +102,13 @@ public class Iris : MonoBehaviour
         return null;
     }
 
+    bool CheckNode(int row, int col)
+    {
+        if (row < 0 || row >= rowCount || col < 0 || col >= colCount)
+            return false;
+        return true;
+    }
+
     IEnumerator FadeIn(int row, int col)
     {
         nodeArr[row, col].color = transparent;
@@ -109,34 +118,30 @@ public class Iris : MonoBehaviour
             // LEFT
             for(int r = -i; r <= i; r++)
             {
-                if (row + r < 0 || row + r >= rowCount || col - i < 0)
-                    continue;
-                nodeArr[row + r, col - i].color = transparent;
+                if (CheckNode(row + r, col - i))
+                    nodeArr[row + r, col - i].color = transparent;
             }
 
             // RIGHT
             for (int r = -i; r <= i; r++)
             {
-                if (row + r < 0 || row + r >= rowCount || col + i >= colCount)
-                    continue;
-                nodeArr[row + r, col + i].color = transparent;
+                if (CheckNode(row + r, col + i))
+                    nodeArr[row + r, col + i].color = transparent;
             }      
             
             // UP
             for (int c = -i; c <= i; c++)
             {
-                if (row - i < 0 || col + c < 0 || col + c >= colCount)
-                    continue;
-                nodeArr[row - i, col + c].color = transparent;
+                if (CheckNode(row - i, col + c))
+                    nodeArr[row - i, col + c].color = transparent;
                 
             }
 
             // DOWN
             for (int c = -i; c <= i; c++)
             {
-                if (row + i >= rowCount || col + c < 0 || col + c >= colCount)
-                    continue;
-                nodeArr[row + i, col + c].color = transparent;
+                if (CheckNode(row + i, col + c))
+                    nodeArr[row + i, col + c].color = transparent;
             }
             yield return new WaitForSeconds(0.05f);
         }
@@ -151,34 +156,30 @@ public class Iris : MonoBehaviour
             // LEFT
             for (int r = -i; r <= i; r++)
             {
-                if (row + r < 0 || row + r >= rowCount || col - i < 0)
-                    continue;
-                nodeArr[row + r, col - i].color = Color.black;
+                if (CheckNode(row + r, col - i))
+                    nodeArr[row + r, col - i].color = Color.black;
             }
 
             // RIGHT
             for (int r = -i; r <= i; r++)
             {
-                if (row + r < 0 || row + r >= rowCount || col + i >= colCount)
-                    continue;
-                nodeArr[row + r, col + i].color = Color.black;
+                if (CheckNode(row + r, col + i))
+                    nodeArr[row + r, col + i].color = Color.black;
             }
 
             // UP
             for (int c = -i; c <= i; c++)
             {
-                if (row - i < 0 || col + c < 0 || col + c >= colCount)
-                    continue;
-                nodeArr[row - i, col + c].color = Color.black;
+                if (CheckNode(row - i, col + c))
+                    nodeArr[row - i, col + c].color = Color.black;
 
             }
 
             // DOWN
             for (int c = -i; c <= i; c++)
             {
-                if (row + i >= rowCount || col + c < 0 || col + c >= colCount)
-                    continue;
-                nodeArr[row + i, col + c].color = Color.black;
+                if (CheckNode(row + i, col + c))
+                    nodeArr[row + i, col + c].color = Color.black;
             }
             yield return new WaitForSeconds(0.05f);
         }
